@@ -174,3 +174,13 @@ cython_debug/
 *.ncf
 ACONC.*
 *.csv
+
+# Model
+*.pb
+*.keras
+variables.*
+*.index
+
+
+# Result
+*.png
