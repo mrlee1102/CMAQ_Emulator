@@ -8,6 +8,18 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import sys, os
 
+'''
+version: v1
+app packaging:
+
+user@user1:~/workdir/main$ python -m PyInstaller --onefile \
+>   --add-data "resources/geom:resources/geom" \
+>   --add-data "resources/ctrl:resources/ctrl" \
+>   --add-data "src/model/nitrate/scaled_o3/input5_modi/final_model:final_model" \
+>   nitrate_training/prediction.py
+
+'''
+
 def resource_path(relative_path):
     """
     실행 파일 내부 또는 개발 환경에서 파일 경로를 올바르게 반환합니다.
