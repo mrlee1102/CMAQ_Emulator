@@ -184,3 +184,6 @@ variables.*
 
 # Result
 *.png
+
+# EXE
+*.spec
