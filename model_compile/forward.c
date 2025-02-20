@@ -27,7 +27,7 @@ void encode_block(
 {
     // 임시 버퍼: 첫 번째 conv2d 결과 저장 (크기: [batch, height, width, filter_1])
     float ****tmp_0 = alloc_4d_arr(batch_size, height, width, filter_1);
-
+    
     // [1] 첫 번째 Conv2D: input → tmp_0
     conv2d(input, tmp_0, weight_0, bias_0, batch_size,
            filter_0, filter_1, height, width, kernel_0, stride_0, padding_0);
@@ -243,11 +243,13 @@ void encoding(float ****input, float ****x0, float ****x1, float ****x2, float *
     );
 
     // 임시 버퍼 해제
+    
     free_4d_arr(tmp0, batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1);
     free_4d_arr(tmp1, batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2);
     free_4d_arr(tmp2, batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3);
     free_4d_arr(tmp3, batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4);
     free_4d_arr(tmp4, batch_size, UNET_PAR_ROW_NUM >> 5, UNET_PAR_COL_NUM >> 5);
+    /**/
     return;
 }
 
@@ -365,7 +367,7 @@ void forward(float ***input, float ****output, int batch_size) {
 
     // 3) 디코딩: 인코딩 결과와 skip connection을 활용하여 최종 출력 생성
     decoding(x4, output, x0, x1, x2, x3, batch_size);
-
+    
     // 4) 임시 버퍼 해제
     free_4d_arr(gridded_input, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
     free_4d_arr(resized_gridded_input, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
@@ -440,6 +442,7 @@ int main(void) {
     float ***inputs = set_ctrl_mat(batch_size);
     float ****outputs = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, 1);
 
+    printf("Complete Input Setup... \nProgress forward.");
     forward(inputs, outputs, batch_size);
 
     free_3d_arr(inputs, batch_size, CMAQ_PAR_REGION_NUM);
