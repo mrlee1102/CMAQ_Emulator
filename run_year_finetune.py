@@ -22,7 +22,7 @@ for gpu in gpus:
 
 from sklearn.model_selection import train_test_split
 from cmaqnet.alloc import allocation, const_allocation
-from cmaqnet.model_met import get_unet_model, load_model
+from cmaqnet.model import get_unet_model, load_model
 SEASON = ['January', 'April', 'July', 'October']
 CTRL_KEY_LIST = ['ALL_POW','ALL_IND','ALL_MOB','ALL_RES','NH3_AGR','ALL_SLV','ALL_OTH']
 EMIS_KEY = ['SO2', 'NH3', 'VOCs', 'CO', 'PM2_5', 'NOx']
