@@ -35,12 +35,12 @@ void conv2d_transpose(
                                 // Calculate the output spatial indices
                                 int oh = ih * stride + kh - padding;
                                 int ow = iw * stride + kw - padding;
-
+                                
                                 // Check if the output indices are within bounds
+                                // printf("41 line Calculate...");
                                 if (oh >= 0 && oh < out_height && ow >= 0 && ow < out_width) {
                                     // Calculate the index in the flattened weights array
                                     int weight_index = ((oc * in_channels + ic) * kernel_size + kw) * kernel_size + kh;
-
                                     // Accumulate the transposed convolution result
                                     output[b][oh][ow][oc] += input[b][ih][iw][ic] * weights[weight_index];
                                 }

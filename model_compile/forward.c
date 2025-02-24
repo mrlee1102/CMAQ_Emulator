@@ -4,175 +4,112 @@
  * 1) 인코더 블록: encode_block
  *    (Conv2D → BN → Activation → Conv2D → BN → Activation → MaxPool)
  *----------------------------------------------------------*/
+// ==================== encode_block ====================
 void encode_block(
     float ****input, float ****output_0, float ****output_1,
     int batch_size, int height, int width,
-    // 첫 번째 conv2d의 파라미터
     int filter_0, int filter_1, int kernel_0, int stride_0, int padding_0,
-    // 두 번째 conv2d의 파라미터
     int filter_2, int filter_3, int kernel_1, int stride_1, int padding_1,
-    // 세 번째 conv2d의 파라미터
     int filter_4, int filter_5, int kernel_2, int stride_2, int padding_2,
-    // 첫 번째 conv2d의 가중치/편향
     const float *weight_0, const float *bias_0,
-    // 두 번째 conv2d의 가중치/편향
     const float *weight_1, const float *bias_1,
-    // 첫 번째 BN (두 번째 conv2d 후)의 파라미터
     const float *gamma_0, const float *beta_0, const float *mean_0, const float *var_0,
-    // 세 번째 conv2d의 가중치/편향
     const float *weight_2, const float *bias_2,
-    // 두 번째 BN (세 번째 conv2d 후)의 파라미터
     const float *gamma_1, const float *beta_1, const float *mean_1, const float *var_1
-) 
+)
 {
-    // 임시 버퍼: 첫 번째 conv2d 결과 저장 (크기: [batch, height, width, filter_1])
+    // 임시 버퍼: (batch, height, width, filter_1)
     float ****tmp_0 = alloc_4d_arr(batch_size, height, width, filter_1);
     
-    // [1] 첫 번째 Conv2D: input → tmp_0
     conv2d(input, tmp_0, weight_0, bias_0, batch_size,
            filter_0, filter_1, height, width, kernel_0, stride_0, padding_0);
-
-    // [2] 두 번째 Conv2D: tmp_0 → tmp_0 (채널 수 변경: filter_2→filter_3)
+    
     conv2d(tmp_0, tmp_0, weight_1, bias_1, batch_size,
            filter_2, filter_3, height, width, kernel_1, stride_1, padding_1);
-
-    // [3] 첫 번째 Batch Normalization 및 SILU 활성화 (두 번째 conv2d의 출력에 대해)
+    
     batch_normalization(tmp_0, gamma_0, beta_0, mean_0, var_0,
                         batch_size, height, width, filter_3, 0.001, 0.99);
     silu(tmp_0, batch_size, height, width, filter_3);
-
-    // [4] 세 번째 Conv2D: tmp_0 → output_1
+    
     conv2d(tmp_0, output_1, weight_2, bias_2, batch_size,
            filter_4, filter_5, height, width, kernel_2, stride_2, padding_2);
-
-    // [5] 두 번째 Batch Normalization 및 SILU 활성화 (세 번째 conv2d의 출력에 대해)
+    
     batch_normalization(output_1, gamma_1, beta_1, mean_1, var_1,
                         batch_size, height, width, filter_5, 0.001, 0.99);
     silu(output_1, batch_size, height, width, filter_5);
-
-    // [6] Max Pooling: output_1 → output_0 (채널 수: filter_5)
+    
     max_pool(output_1, output_0, batch_size, height, width, filter_5, 2, 2);
-
+    
     free_4d_arr(tmp_0, batch_size, height, width);
 }
 
-/*----------------------------------------------------------
- * 2) 디코더 블록: decode_block
- *    (Conv2DTranspose → BN → Activation → Concat → Conv2D → Conv2D → BN → Activation)
- *----------------------------------------------------------*/
+// ==================== decode_block ====================
+// 수정 포인트: (1) tmp_1 할당 시, 채널 수를 2*filter_1로 수정 (즉, 두 입력의 채널 합)
+//             (2) 호출부에서 전달되는 height, width는 pre‑업샘플 크기 (예: 첫 디코더는 (6,4))
 void decode_block(
     float ****input_0, float ****input_1, float ****output,
     int batch_size, int height, int width,
-    // [A] Conv2DTranspose 관련 파라미터
+    // [A] Conv2DTranspose 파라미터
     int filter_0, int filter_1, int kernel_0, int stride_0, int padding_0,
-    // [B] 첫 번째 Conv2D (Concat 후) 관련 파라미터
+    // [B] 첫 번째 Conv2D (Concat 후) 파라미터
     int filter_2, int filter_3, int kernel_1, int stride_1, int padding_1,
-    // [C] 두 번째 Conv2D 관련 파라미터
+    // [C] 두 번째 Conv2D 파라미터
     int filter_4, int filter_5, int kernel_2, int stride_2, int padding_2,
     // [D] Conv2DTranspose 가중치/편향
     const float *weight_0, const float *bias_0,
-    // [E] 첫 번째 Batch Normalization (Conv2DTranspose 후) 파라미터
+    // [E] BN (Conv2DTranspose 후) 파라미터
     const float *gamma_0, const float *beta_0, const float *mean_0, const float *var_0,
     // [F] 첫 번째 Conv2D 가중치/편향 (Concat 후)
     const float *weight_1, const float *bias_1,
     // [H] 두 번째 Conv2D 가중치/편향
     const float *weight_2, const float *bias_2,
-    // [G] 두 번째 Batch Normalization (첫 번째 Conv2D 후) 파라미터
+    // [G] BN (첫 번째 Conv2D 후) 파라미터
     const float *gamma_1, const float *beta_1, const float *mean_1, const float *var_1
 )
 {
-    // [1] 임시 버퍼 할당: Conv2DTranspose의 결과 저장
-    //     크기: [batch_size, height*2, width*2, filter_1]
+    // tmp_0: Conv2DTranspose 결과 → (batch, height<<1, width<<1, filter_1)
     float ****tmp_0 = alloc_4d_arr(batch_size, height << 1, width << 1, filter_1);
     
-    // [2] 임시 버퍼 할당: Concat 결과 저장
-    //     (두 입력(tmp_0와 input_1)의 채널 수가 같다고 가정하면, 최종 채널 수는 2*filter_1이어야 함.
-    //      이 값은 filter_2로 정의되어 있다고 가정)
-    float ****tmp_1 = alloc_4d_arr(batch_size, height << 1, width << 1, filter_2);
+    // tmp_1: Concat 결과, 두 입력 모두 채널 수 = filter_1이므로 총 채널 수 = 2 * filter_1
+    float ****tmp_1 = alloc_4d_arr(batch_size, height << 1, width << 1, filter_1 * 2);
     
-    // [3] 임시 버퍼 할당: 첫 번째 Conv2D 결과 저장
-    //     크기: [batch_size, height*2, width*2, filter_3]
+    // tmp_2: 첫 번째 Conv2D 결과 후, 채널 수 = filter_3
     float ****tmp_2 = alloc_4d_arr(batch_size, height << 1, width << 1, filter_3);
     
-    // [A] Conv2DTranspose: input_0 → tmp_0
-    conv2d_transpose(
-        input_0, tmp_0,
-        weight_0, bias_0,
-        batch_size,
-        filter_0, filter_1,
-        height, width,
-        kernel_0, stride_0, padding_0
-    );
+    conv2d_transpose(input_0, tmp_0, weight_0, bias_0, batch_size,
+                     filter_0, filter_1, height, width, kernel_0, stride_0, padding_0);
     
-    // [B] 첫 번째 Batch Normalization + SILU (Conv2DTranspose 후)
-    batch_normalization(
-        tmp_0,
-        gamma_0, beta_0, mean_0, var_0,
-        batch_size, (height << 1), (width << 1), filter_1,
-        0.001, 0.99
-    );
-    silu(tmp_0, batch_size, (height << 1), (width << 1), filter_1);
+    batch_normalization(tmp_0, gamma_0, beta_0, mean_0, var_0,
+                        batch_size, height << 1, width << 1, filter_1, 0.001, 0.99);
+    silu(tmp_0, batch_size, height << 1, width << 1, filter_1);
     
-    // [C] Concat: tmp_0와 input_1를 채널 방향으로 결합하여 tmp_1에 저장
-    concatenate(
-        tmp_0,        // 업샘플링된 feature map
-        input_1,      // skip-connection feature map
-        tmp_1,        // 결합 결과
-        batch_size,
-        (height << 1), (width << 1),
-        filter_1,    
-        filter_1     
-    );
+    concatenate(tmp_0, input_1, tmp_1, batch_size, height << 1, width << 1, filter_1, filter_1);
     
-    // [D] 첫 번째 Conv2D: Concat 결과(tmp_1)를 입력으로 하여 feature map 생성 → tmp_2
-    conv2d(
-        tmp_1, tmp_2,
-        weight_1, bias_1,
-        batch_size,
-        filter_2, filter_3,
-        (height << 1), (width << 1),
-        kernel_1, stride_1, padding_1
-    );
-
-    conv2d(
-        tmp_2, output,
-        weight_2, bias_2,
-        batch_size,
-        filter_4, filter_5,
-        (height << 1), (width << 1),
-        kernel_2, stride_2, padding_2
-    );
+    conv2d(tmp_1, tmp_2, weight_1, bias_1, batch_size,
+           filter_1 * 2, filter_3, height << 1, width << 1, kernel_1, stride_1, padding_1);
     
-    // [E] 두 번째 Batch Normalization + SILU (첫 번째 Conv2D 후)
-    batch_normalization(
-        output,
-        gamma_1, beta_1, mean_1, var_1,
-        batch_size, (height << 1), (width << 1), filter_5,
-        0.001, 0.99
-    );
-    silu(output, batch_size, (height << 1), (width << 1), filter_5);
+    conv2d(tmp_2, output, weight_2, bias_2, batch_size,
+           filter_4, filter_5, height << 1, width << 1, kernel_2, stride_2, padding_2);
     
-    // 임시 버퍼 해제
+    batch_normalization(output, gamma_1, beta_1, mean_1, var_1,
+                        batch_size, height << 1, width << 1, filter_5, 0.001, 0.99);
+    silu(output, batch_size, height << 1, width << 1, filter_5);
+    
     free_4d_arr(tmp_0, batch_size, height << 1, width << 1);
     free_4d_arr(tmp_1, batch_size, height << 1, width << 1);
     free_4d_arr(tmp_2, batch_size, height << 1, width << 1);
 }
 
-
-
-/*----------------------------------------------------------
- * 3) 인코딩: 여러 encode_block 호출을 통해 skip connection 값(x0~x4) 생성
- *----------------------------------------------------------*/
-void encoding(float ****input, float ****x0, float ****x1, float ****x2, float ****x3, float ****x4, int batch_size) 
+// ==================== encoding ====================
+void encoding(float ****input, float ****x0, float ****x1, float ****x2, float ****x3, float ****x4, int batch_size)
 {
-    // 임시 버퍼 할당 (각 블록 사이의 출력 저장)
     float ****tmp0 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1, UNET_PAR_3_CONV2D_OUT_FILTER);
     float ****tmp1 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2, UNET_PAR_8_CONV2D_OUT_FILTER);
     float ****tmp2 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3, UNET_PAR_13_CONV2D_OUT_FILTER);
     float ****tmp3 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4, UNET_PAR_18_CONV2D_OUT_FILTER);
     float ****tmp4 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 5, UNET_PAR_COL_NUM >> 5, UNET_PAR_23_CONV2D_OUT_FILTER);
 
-    // 인코더 블록 #1
+    // 인코더 블록 #1: (96,64,?) → x0: (96,64,UNET_PAR_3_CONV2D_OUT_FILTER)
     encode_block(
         input, tmp0, x0,
         batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM,
@@ -186,7 +123,7 @@ void encoding(float ****input, float ****x0, float ****x1, float ****x2, float *
         (float *)layer_4_batch_normalization_gamma, (float *)layer_4_batch_normalization_beta, (float *)layer_4_batch_normalization_mean, (float *)layer_4_batch_normalization_variance
     );
 
-    // 인코더 블록 #2
+    // 인코더 블록 #2: (48,32,?) → x1: (48,32,UNET_PAR_8_CONV2D_OUT_FILTER)
     encode_block(
         tmp0, tmp1, x1,
         batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1,
@@ -200,7 +137,7 @@ void encoding(float ****input, float ****x0, float ****x1, float ****x2, float *
         (float *)layer_9_batch_normalization_gamma, (float *)layer_9_batch_normalization_beta, (float *)layer_9_batch_normalization_mean, (float *)layer_9_batch_normalization_variance
     );
 
-    // 인코더 블록 #3
+    // 인코더 블록 #3: (24,16,?) → x2: (24,16,UNET_PAR_13_CONV2D_OUT_FILTER)
     encode_block(
         tmp1, tmp2, x2,
         batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2,
@@ -214,7 +151,7 @@ void encoding(float ****input, float ****x0, float ****x1, float ****x2, float *
         (float *)layer_14_batch_normalization_gamma, (float *)layer_14_batch_normalization_beta, (float *)layer_14_batch_normalization_mean, (float *)layer_14_batch_normalization_variance
     );
 
-    // 인코더 블록 #4
+    // 인코더 블록 #4: (12,8,?) → x3: (12,8,UNET_PAR_18_CONV2D_OUT_FILTER)
     encode_block(
         tmp2, tmp3, x3,
         batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3,
@@ -228,7 +165,7 @@ void encoding(float ****input, float ****x0, float ****x1, float ****x2, float *
         (float *)layer_19_batch_normalization_gamma, (float *)layer_19_batch_normalization_beta, (float *)layer_19_batch_normalization_mean, (float *)layer_19_batch_normalization_variance
     );
 
-    // 인코더 블록 #5
+    // 인코더 블록 #5: (6,4,?) → x4: (6,4,UNET_PAR_23_CONV2D_OUT_FILTER)
     encode_block(
         tmp3, tmp4, x4,
         batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4,
@@ -242,33 +179,27 @@ void encoding(float ****input, float ****x0, float ****x1, float ****x2, float *
         (float *)layer_24_batch_normalization_gamma, (float *)layer_24_batch_normalization_beta, (float *)layer_24_batch_normalization_mean, (float *)layer_24_batch_normalization_variance
     );
 
-    // 임시 버퍼 해제
-    
     free_4d_arr(tmp0, batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1);
     free_4d_arr(tmp1, batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2);
     free_4d_arr(tmp2, batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3);
     free_4d_arr(tmp3, batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4);
     free_4d_arr(tmp4, batch_size, UNET_PAR_ROW_NUM >> 5, UNET_PAR_COL_NUM >> 5);
-    /**/
     return;
 }
 
-/*----------------------------------------------------------
- * 4) 디코딩: 여러 번 decode_block 호출 및 최종 Conv2D + Resize
- *----------------------------------------------------------*/
-void decoding(float ****input, float ****output, float ****x0, float ****x1, float ****x2, float ****x3, int batch_size) 
+// ==================== decoding ====================
+void decoding(float ****input, float ****output, float ****x0, float ****x1, float ****x2, float ****x3, int batch_size)
 {
-    // 임시 버퍼 할당
     float ****tmp0 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3, UNET_PAR_28_CONV2D_OUT_FILTER);
     float ****tmp1 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2, UNET_PAR_33_CONV2D_OUT_FILTER);
     float ****tmp2 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1, UNET_PAR_38_CONV2D_OUT_FILTER);
     float ****tmp3 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, UNET_PAR_43_CONV2D_OUT_FILTER);
-    float ****tmp4 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, UNET_PAR_45_CONV2D_OUT_FILTER); 
+    float ****tmp4 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, UNET_PAR_45_CONV2D_OUT_FILTER);
 
-    // 디코더 블록 #1
+    // 디코더 블록 #1: pre-upsample (6,4) → after Conv2DTranspose: (12,8)
     decode_block(
         input, x3, tmp0,
-        batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4,
+        batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4,  // (6,4)
         UNET_PAR_25_CONV2D_TRANSPOSE_IN_FILTER, UNET_PAR_25_CONV2D_TRANSPOSE_OUT_FILTER, UNET_PAR_25_CONV2D_TRANSPOSE_KERNEL_Y, 2, 0,
         UNET_PAR_27_CONV2D_IN_FILTER, UNET_PAR_27_CONV2D_OUT_FILTER, UNET_PAR_27_CONV2D_KERNEL_Y, 1, 1,
         UNET_PAR_28_CONV2D_IN_FILTER, UNET_PAR_28_CONV2D_OUT_FILTER, UNET_PAR_28_CONV2D_KERNEL_Y, 1, 1,
@@ -279,9 +210,12 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
         (float *)layer_29_batch_normalization_gamma, (float *)layer_29_batch_normalization_beta, (float *)layer_29_batch_normalization_mean, (float *)layer_29_batch_normalization_variance
     );
 
-    // 디코더 블록 #2
+    // 디코더 블록 #2: pre-upsample (12,8) → (24,16)
     decode_block(
         tmp0, x2, tmp1,
+        // batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4,  // pre-upsample: (6,4) was used in block1; now block2 input should be (12,8)
+        // 만약 첫 블록의 output is (12,8), pre-upsample for block2 should be (12,8) 
+        // → 따라서 여기서는 UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3 = (12,8) 사용
         batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3,
         UNET_PAR_30_CONV2D_TRANSPOSE_IN_FILTER, UNET_PAR_30_CONV2D_TRANSPOSE_OUT_FILTER, UNET_PAR_30_CONV2D_TRANSPOSE_KERNEL_Y, 2, 0,
         UNET_PAR_32_CONV2D_IN_FILTER, UNET_PAR_32_CONV2D_OUT_FILTER, UNET_PAR_32_CONV2D_KERNEL_Y, 1, 1,
@@ -293,10 +227,10 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
         (float *)layer_34_batch_normalization_gamma, (float *)layer_34_batch_normalization_beta, (float *)layer_34_batch_normalization_mean, (float *)layer_34_batch_normalization_variance
     );
 
-    // 디코더 블록 #3
+    // 디코더 블록 #3: pre-upsample (24,16) → (48,32)
     decode_block(
         tmp1, x1, tmp2,
-        batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2,
+        batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2,  // (24,16)
         UNET_PAR_35_CONV2D_TRANSPOSE_IN_FILTER, UNET_PAR_35_CONV2D_TRANSPOSE_OUT_FILTER, UNET_PAR_35_CONV2D_TRANSPOSE_KERNEL_Y, 2, 0,
         UNET_PAR_37_CONV2D_IN_FILTER, UNET_PAR_37_CONV2D_OUT_FILTER, UNET_PAR_37_CONV2D_KERNEL_Y, 1, 1,
         UNET_PAR_38_CONV2D_IN_FILTER, UNET_PAR_38_CONV2D_OUT_FILTER, UNET_PAR_38_CONV2D_KERNEL_Y, 1, 1,
@@ -307,10 +241,10 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
         (float *)layer_39_batch_normalization_gamma, (float *)layer_39_batch_normalization_beta, (float *)layer_39_batch_normalization_mean, (float *)layer_39_batch_normalization_variance
     );
 
-    // 디코더 블록 #4
+    // 디코더 블록 #4: pre-upsample (48,32) → (96,64)
     decode_block(
         tmp2, x0, tmp3,
-        batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1,
+        batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1,  // (48,32)
         UNET_PAR_40_CONV2D_TRANSPOSE_IN_FILTER, UNET_PAR_40_CONV2D_TRANSPOSE_OUT_FILTER, UNET_PAR_40_CONV2D_TRANSPOSE_KERNEL_Y, 2, 0,
         UNET_PAR_42_CONV2D_IN_FILTER, UNET_PAR_42_CONV2D_OUT_FILTER, UNET_PAR_42_CONV2D_KERNEL_Y, 1, 1,
         UNET_PAR_43_CONV2D_IN_FILTER, UNET_PAR_43_CONV2D_OUT_FILTER, UNET_PAR_43_CONV2D_KERNEL_Y, 1, 1,
@@ -321,21 +255,18 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
         (float *)layer_44_batch_normalization_gamma, (float *)layer_44_batch_normalization_beta, (float *)layer_44_batch_normalization_mean, (float *)layer_44_batch_normalization_variance
     );
 
-    // 마지막 Conv2D (최종 출력 생성)
     conv2d(
         tmp3, tmp4, (float *)layer_45_conv2d_weight, (float *)layer_45_conv2d_bias,
         batch_size, UNET_PAR_45_CONV2D_IN_FILTER, UNET_PAR_45_CONV2D_OUT_FILTER,
         UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, UNET_PAR_45_CONV2D_KERNEL_Y, 1, 0
     );
-    // 필요 시 최종 결과를 원본 그리드 크기로 resize
     resize_bilinear_batch(
         tmp4, output, batch_size,
         UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM,
         CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM,
-        UNET_PAR_45_CONV2D_OUT_FILTER  // 채널 수에 해당하는 매크로
+        UNET_PAR_45_CONV2D_OUT_FILTER
     );
 
-    // 임시 버퍼 해제
     free_4d_arr(tmp0, batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3);
     free_4d_arr(tmp1, batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2);
     free_4d_arr(tmp2, batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1);
@@ -348,7 +279,6 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
  * 5) forward: 인코딩 + 디코딩 전체 과정
  *----------------------------------------------------------*/
 void forward(float ***input, float ****output, int batch_size) {
-    // 1) Gridding 및 Resizing
     float ****gridded_input = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
     float ****resized_gridded_input = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
     gridding(input, gridded_input, batch_size, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM);
@@ -357,7 +287,6 @@ void forward(float ***input, float ****output, int batch_size) {
                           UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM,
                           CMAQ_PAR_SECTOR_NUM);
 
-    // 2) 인코딩: skip connection 값 x0~x4 생성
     float ****x0 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, UNET_PAR_3_CONV2D_OUT_FILTER);
     float ****x1 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1, UNET_PAR_8_CONV2D_OUT_FILTER);
     float ****x2 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2, UNET_PAR_13_CONV2D_OUT_FILTER);
@@ -365,10 +294,8 @@ void forward(float ***input, float ****output, int batch_size) {
     float ****x4 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4, UNET_PAR_23_CONV2D_OUT_FILTER);
     encoding(resized_gridded_input, x0, x1, x2, x3, x4, batch_size);
 
-    // 3) 디코딩: 인코딩 결과와 skip connection을 활용하여 최종 출력 생성
     decoding(x4, output, x0, x1, x2, x3, batch_size);
     
-    // 4) 임시 버퍼 해제
     free_4d_arr(gridded_input, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
     free_4d_arr(resized_gridded_input, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
     free_4d_arr(x0, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
@@ -386,7 +313,6 @@ void call(float *c_inputs, float *c_outputs, int batch_size) {
     float ***inputs = alloc_3d_arr(batch_size, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM);
     float ****outputs = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, UNET_PAR_45_CONV2D_OUT_FILTER);
 
-    // 1D 입력 배열을 3D 배열로 매핑
     for (size_t i = 0; i < batch_size; i++) {
         for (size_t j = 0; j < CMAQ_PAR_REGION_NUM; j++) {
             for (size_t k = 0; k < CMAQ_PAR_SECTOR_NUM; k++) {
@@ -397,7 +323,6 @@ void call(float *c_inputs, float *c_outputs, int batch_size) {
 
     forward(inputs, outputs, batch_size);
 
-    // 3D 출력 배열을 1D 배열로 매핑
     for (size_t i = 0; i < batch_size; i++) {
         for (size_t j = 0; j < CMAQ_PAR_ROW_NUM; j++) {
             for (size_t k = 0; k < CMAQ_PAR_COL_NUM; k++) {

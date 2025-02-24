@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -Wall -Wextra -O3  -shared -Wl,-soname,libforward.so -o libforward.so CMakeFiles/forward.dir/forward.c.o 

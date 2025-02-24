@@ -5,7 +5,7 @@ import tqdm
 
 class CMAQNet(object):
     # ver1 모델용 공유 라이브러리 로드 (입력: (119,), 출력: (82, 67, 1))
-    model = ctypes.CDLL('/home/user/workdir/CMAQ_Emulator/build/libforward.so')
+    model = ctypes.CDLL('/home/user/workdir/CMAQ_Emulator/compiled/libforward.so')
     # 함수 프로토타입: void call(float* input, float* output, int batch_size)
     model.call.argtypes = [
         ctypes.POINTER(ctypes.c_float),  # 입력 배열 (flatten된 데이터)
