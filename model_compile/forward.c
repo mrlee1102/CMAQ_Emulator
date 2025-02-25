@@ -367,7 +367,7 @@ int main(void) {
     float ***inputs = set_ctrl_mat(batch_size);
     float ****outputs = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, 1);
 
-    printf("Complete Input Setup... \nProgress forward.");
+    printf("Complete Input Setup... \nProgress forward...");
     forward(inputs, outputs, batch_size);
 
     free_3d_arr(inputs, batch_size, CMAQ_PAR_REGION_NUM);
