@@ -4,29 +4,32 @@ import matplotlib.pyplot as plt
 import tqdm
 
 class CMAQNet(object):
-    # ver1 모델용 공유 라이브러리 로드 (입력: (119,), 출력: (82, 67, 1))
+    # 공유 라이브러리 로드 (C forward.c의 새 call() 함수 사용)
     model = ctypes.CDLL('/home/user/workdir/CMAQ_Emulator/build/libforward.so')
-    # 함수 프로토타입: void call(float* input, float* output, int batch_size)
+    # 새 함수 프로토타입: void call(float* c_ctrl_inputs, float* c_meteo_inputs, float* c_outputs, int batch_size)
     model.call.argtypes = [
-        ctypes.POINTER(ctypes.c_float),  # 입력 배열 (flatten된 데이터)
-        ctypes.POINTER(ctypes.c_float),  # 출력 배열 (flatten된 데이터)
+        ctypes.POINTER(ctypes.c_float),  # 컨트롤 입력 (flattened)
+        ctypes.POINTER(ctypes.c_float),  # 메테오 입력 (flattened)
+        ctypes.POINTER(ctypes.c_float),  # 출력 (flattened)
         ctypes.c_int                     # 배치 사이즈
     ]
     model.call.restype = None
 
     @staticmethod
-    def predict(x, batch_size: int = 1):
-        # x: control matrix, shape: (num_samples, 119)
-        num_samples = x.shape[0]
-        x = x.astype(np.float32)  # ensure float32
-        # 배치 단위로 분할 (각 배치: (batch_size, 119))
-        batched_x = np.array_split(x, num_samples // batch_size)
-        # 모델 출력: shape: (batch_size, 82, 67, 1)
-        batched_outputs = np.zeros((len(batched_x), batch_size, 82, 67, 1), dtype=np.float32)
-        pbar = tqdm.tqdm(total=len(batched_x), desc='Predicting')
-        for i in range(len(batched_x)):
+    def predict(ctrl_x, meteo_x, batch_size: int = 1):
+        num_samples = ctrl_x.shape[0]
+        ctrl_x = ctrl_x.astype(np.float32)
+        meteo_x = meteo_x.astype(np.float32)
+        num_batches = num_samples // batch_size
+
+        ctrl_batches = np.array_split(ctrl_x, num_batches)
+        meteo_batches = np.array_split(meteo_x, num_batches)
+        batched_outputs = np.zeros((num_batches, batch_size, 82, 67, 1), dtype=np.float32)
+        pbar = tqdm.tqdm(total=num_batches, desc='Predicting')
+        for i in range(num_batches):
             CMAQNet.model.call(
-                batched_x[i].reshape(-1).ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                ctrl_batches[i].reshape(-1).ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                meteo_batches[i].reshape(-1).ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 batched_outputs[i].reshape(-1).ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 batch_size
             )
@@ -34,15 +37,19 @@ class CMAQNet(object):
         pbar.close()
         return batched_outputs.reshape((num_samples, 82, 67, 1))
 
-# 테스트: 총 16개 샘플, 한 번에 모두 예측
 total_size = 16
-batch_size = total_size
+batch_size = 4
+# 컨트롤 입력: (total_size, 119)
+ctrl_inputs = (np.random.rand(total_size, 119) + 0.5).astype(np.float32)
+# 메테오 입력: (total_size, 82, 67, 7)
+meteo_inputs = np.random.uniform(low=0.003, high=0.010, size=(total_size, 82, 67, 7)).astype(np.float32)
 
-# 랜덤 데이터 생성: control matrix, shape (total_size, 119)
-inputs = (np.random.rand(total_size, 119) + 0.5).astype(np.float32)
-outputs = CMAQNet.predict(inputs, batch_size)
+print("Control input shape:", ctrl_inputs.shape)
+print("Meteo input shape:", meteo_inputs.shape)
 
-print("출력 shape:", outputs.shape)
+outputs = CMAQNet.predict(ctrl_inputs, meteo_inputs, batch_size)
+print("Output shape:", outputs.shape)
+
 
 # 16개 샘플을 4x4 그리드로 시각화
 plt.figure(figsize=(12, 12))
@@ -53,4 +60,4 @@ for i in range(total_size):
     plt.axis('off')
     plt.colorbar()
 plt.tight_layout()
-plt.show()
+plt.savefig('result_1.png')

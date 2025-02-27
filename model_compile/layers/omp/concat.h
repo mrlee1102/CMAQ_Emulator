@@ -7,8 +7,6 @@ void concatenate(
     float ****input_0, float ****input_1, float ****output,
     int batch_size, int height, int width, int channels_0, int channels_1) {
     int out_channels = channels_0 + channels_1;
-    printf("[concatenate] input_0 pointer = %p, input_1 pointer = %p, output pointer = %p\n", (void*)input_0, (void*)input_1, (void*)output);
-    printf("[concatenate] channels_0 = %d, channels_1 = %d\n", channels_0, channels_1);
     // Iterate over each sample in the batch
     #pragma omp parallel for collapse(3)
     for (int b = 0; b < batch_size; b++) {
