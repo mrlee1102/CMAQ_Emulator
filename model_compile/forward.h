@@ -115,9 +115,10 @@ void decode_block(
 
 void encoding(float ****input, float ****x0, float ****x1, float ****x2, float ****x3, float ****x4, int batch_size);
 void decoding(float ****input, float ****output, float ****x0, float ****x1, float ****x2, float ****x3, int batch_size);
-void forward(float ***input, float ****output, int batch_size);
-void call(float *c_inputs, float *c_outputs, int batch_size);
-
+// void forward(float ***input, float ****output, int batch_size);
+void forward(float ***ctrl_input, float ****meteo_input, float ****output, int batch_size);
+// void call(float *c_inputs, float *c_outputs, int batch_size);
+void call(float *c_ctrl_inputs, float *c_meteo_inputs, float *c_outputs, int batch_size);
 float *set_sector(void);
 float ***set_ctrl_mat(int batch_size);
 

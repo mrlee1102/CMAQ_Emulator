@@ -1,4 +1,29 @@
 #include "forward.h"
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#include <math.h>
+#include <time.h>
+
+double rand_normal(double mean, double std) {
+    // Box-Muller 변환: 두 균등 난수를 사용하여 표준 정규분포 난수 생성
+    double u1 = ((double) rand() + 1) / ((double) RAND_MAX + 1);
+    double u2 = ((double) rand() + 1) / ((double) RAND_MAX + 1);
+    double z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
+    return z0 * std + mean;
+}
+
+float generate_meteo_value() {
+    double mean = 0.04125817;
+    double std  = 0.013417359;
+    double min  = 3.8163438e-19;
+    double max  = 0.12688288;
+    
+    double val = rand_normal(mean, std);
+    if(val < min) val = min;
+    if(val > max) val = max;
+    return (float) val;
+}
 
 /*----------------------------------------------------------
  * 1) 인코더 블록: encode_block
@@ -213,9 +238,7 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
     // 디코더 블록 #2: pre-upsample (12,8) → (24,16)
     decode_block(
         tmp0, x2, tmp1,
-        // batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4,  // pre-upsample: (6,4) was used in block1; now block2 input should be (12,8)
-        // 만약 첫 블록의 output is (12,8), pre-upsample for block2 should be (12,8) 
-        // → 따라서 여기서는 UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3 = (12,8) 사용
+        // UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3 = (12,8) 사용
         batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3,
         UNET_PAR_30_CONV2D_TRANSPOSE_IN_FILTER, UNET_PAR_30_CONV2D_TRANSPOSE_OUT_FILTER, UNET_PAR_30_CONV2D_TRANSPOSE_KERNEL_Y, 2, 0,
         UNET_PAR_32_CONV2D_IN_FILTER, UNET_PAR_32_CONV2D_OUT_FILTER, UNET_PAR_32_CONV2D_KERNEL_Y, 1, 1,
@@ -278,26 +301,48 @@ void decoding(float ****input, float ****output, float ****x0, float ****x1, flo
 /*----------------------------------------------------------
  * 5) forward: 인코딩 + 디코딩 전체 과정
  *----------------------------------------------------------*/
-void forward(float ***input, float ****output, int batch_size) {
+void forward(float ***ctrl_input, float ****meteo_input, float ****output, int batch_size) {
     float ****gridded_input = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
-    float ****resized_gridded_input = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
-    gridding(input, gridded_input, batch_size, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM);
-    resize_bilinear_batch(gridded_input, resized_gridded_input, batch_size,
-                          CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM,
-                          UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM,
-                          CMAQ_PAR_SECTOR_NUM);
+    float ****resized_gridded_input_1 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
+    float ****resized_gridded_input_2 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
+    gridding(ctrl_input, gridded_input, batch_size, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM);
+    resize_bilinear_batch(gridded_input, resized_gridded_input_1, batch_size,
+                            CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM,
+                            UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM,
+                            CMAQ_PAR_SECTOR_NUM);
+    resize_bilinear_batch(meteo_input, resized_gridded_input_2, batch_size,
+                            CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM,
+                            UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM,
+                            CMAQ_PAR_SECTOR_NUM);
+    int combined_channels = CMAQ_PAR_SECTOR_NUM + CMAQ_PAR_SECTOR_NUM;
+    float ****combined_input = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, combined_channels);
+  
+    for (int b = 0; b < batch_size; b++) {
+        for (int h = 0; h < UNET_PAR_ROW_NUM; h++) {
+            for (int w = 0; w < UNET_PAR_COL_NUM; w++) {
+                for (int c = 0; c < CMAQ_PAR_SECTOR_NUM; c++) {
+                    combined_input[b][h][w][c] = resized_gridded_input_1[b][h][w][c];
+                }
+                for (int c = 0; c < CMAQ_PAR_SECTOR_NUM; c++) {
+                    combined_input[b][h][w][CMAQ_PAR_SECTOR_NUM + c] = resized_gridded_input_2[b][h][w][c];
+                }
+            }
+        }
+    }
 
     float ****x0 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, UNET_PAR_3_CONV2D_OUT_FILTER);
     float ****x1 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1, UNET_PAR_8_CONV2D_OUT_FILTER);
     float ****x2 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2, UNET_PAR_13_CONV2D_OUT_FILTER);
     float ****x3 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 3, UNET_PAR_COL_NUM >> 3, UNET_PAR_18_CONV2D_OUT_FILTER);
     float ****x4 = alloc_4d_arr(batch_size, UNET_PAR_ROW_NUM >> 4, UNET_PAR_COL_NUM >> 4, UNET_PAR_23_CONV2D_OUT_FILTER);
-    encoding(resized_gridded_input, x0, x1, x2, x3, x4, batch_size);
-
+    encoding(combined_input, x0, x1, x2, x3, x4, batch_size);
+  
     decoding(x4, output, x0, x1, x2, x3, batch_size);
     
     free_4d_arr(gridded_input, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
-    free_4d_arr(resized_gridded_input, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
+    free_4d_arr(resized_gridded_input_1, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
+    free_4d_arr(resized_gridded_input_2, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
+    free_4d_arr(combined_input, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
     free_4d_arr(x0, batch_size, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM);
     free_4d_arr(x1, batch_size, UNET_PAR_ROW_NUM >> 1, UNET_PAR_COL_NUM >> 1);
     free_4d_arr(x2, batch_size, UNET_PAR_ROW_NUM >> 2, UNET_PAR_COL_NUM >> 2);
@@ -309,20 +354,31 @@ void forward(float ***input, float ****output, int batch_size) {
 /*----------------------------------------------------------
  * 6) call: C 스타일 래퍼 함수
  *----------------------------------------------------------*/
-void call(float *c_inputs, float *c_outputs, int batch_size) {
-    float ***inputs = alloc_3d_arr(batch_size, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM);
+void call(float *c_ctrl_inputs, float *c_meteo_inputs, float *c_outputs, int batch_size) {
+    float ***ctrl_inputs = alloc_3d_arr(batch_size, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM);
+    float ****meteo_inputs = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
     float ****outputs = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, UNET_PAR_45_CONV2D_OUT_FILTER);
 
     for (size_t i = 0; i < batch_size; i++) {
         for (size_t j = 0; j < CMAQ_PAR_REGION_NUM; j++) {
             for (size_t k = 0; k < CMAQ_PAR_SECTOR_NUM; k++) {
-                inputs[i][j][k] = c_inputs[i * CMAQ_PAR_REGION_NUM * CMAQ_PAR_SECTOR_NUM + j * CMAQ_PAR_SECTOR_NUM + k];
+                ctrl_inputs[i][j][k] = c_ctrl_inputs[i * CMAQ_PAR_REGION_NUM * CMAQ_PAR_SECTOR_NUM +
+                                                     j * CMAQ_PAR_SECTOR_NUM + k];
             }
         }
     }
-
-    forward(inputs, outputs, batch_size);
-
+    for (size_t i = 0; i < batch_size; i++) {
+        for (size_t j = 0; j < CMAQ_PAR_REGION_NUM; j++) {
+            for (size_t k = 0; k < CMAQ_PAR_SECTOR_NUM; k++) {
+                for (size_t l = 0; l < CMAQ_PAR_SECTOR_NUM; l++) {
+                    meteo_inputs[i][j][k][l] = c_meteo_inputs[i * CMAQ_PAR_ROW_NUM * CMAQ_PAR_COL_NUM * CMAQ_PAR_SECTOR_NUM +
+                                                              j * CMAQ_PAR_COL_NUM * CMAQ_PAR_SECTOR_NUM +
+                                                              k * CMAQ_PAR_SECTOR_NUM + l];
+                }
+            }
+        }
+    }
+    forward(ctrl_inputs, meteo_inputs, outputs, batch_size);
     for (size_t i = 0; i < batch_size; i++) {
         for (size_t j = 0; j < CMAQ_PAR_ROW_NUM; j++) {
             for (size_t k = 0; k < CMAQ_PAR_COL_NUM; k++) {
@@ -336,7 +392,8 @@ void call(float *c_inputs, float *c_outputs, int batch_size) {
         }
     }
 
-    free_3d_arr(inputs, batch_size, CMAQ_PAR_REGION_NUM);
+    free_3d_arr(ctrl_inputs, batch_size, CMAQ_PAR_REGION_NUM);
+    free_4d_arr(meteo_inputs, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
     free_4d_arr(outputs, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
     return;
 }
@@ -362,15 +419,39 @@ float ***set_ctrl_mat(int batch_size) {
     return ctrl_mat;
 }
 
+float ****set_meteo_mat(int batch_size) {
+    float ****meteo = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM);
+    for (int b = 0; b < batch_size; b++) {
+        for (int h = 0; h < CMAQ_PAR_ROW_NUM; h++) {
+            for (int w = 0; w < CMAQ_PAR_COL_NUM; w++) {
+                printf("Enter meteo values for pixel (batch %d, row %d, col %d) separated by spaces (%d values): ",
+                       b, h, w, CMAQ_PAR_SECTOR_NUM);
+                for (int c = 0; c < CMAQ_PAR_SECTOR_NUM; c++) {
+                    scanf("%f", &meteo[b][h][w][c]);
+                }
+            }
+        }
+    }
+    return meteo;
+}
+
 int main(void) {
     int batch_size = 1;
-    float ***inputs = set_ctrl_mat(batch_size);
+    // control input: [batch, CMAQ_PAR_REGION_NUM, CMAQ_PAR_SECTOR_NUM]
+    float ***ctrl_inputs = set_ctrl_mat(batch_size);
+    
+    // meteo input: [batch, UNET_PAR_ROW_NUM, UNET_PAR_COL_NUM, CMAQ_PAR_SECTOR_NUM]
+    float ****meteo_inputs = set_meteo_mat(batch_size);
+    
+    // output: [batch, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, 1]
     float ****outputs = alloc_4d_arr(batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM, 1);
 
-    printf("Complete Input Setup... \nProgress forward...");
-    forward(inputs, outputs, batch_size);
+    printf("Complete Input Setup... \nProgress forward...\n");
+    // forward() 함수는 두 입력(ctrl, meteo)을 받도록 수정되어 있습니다.
+    forward(ctrl_inputs, meteo_inputs, outputs, batch_size);
 
-    free_3d_arr(inputs, batch_size, CMAQ_PAR_REGION_NUM);
+    free_3d_arr(ctrl_inputs, batch_size, CMAQ_PAR_REGION_NUM);
+    free_4d_arr(meteo_inputs, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
     free_4d_arr(outputs, batch_size, CMAQ_PAR_ROW_NUM, CMAQ_PAR_COL_NUM);
     return 0;
 }
