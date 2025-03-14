@@ -3,7 +3,8 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # 모델 로드 (이미 저장된 모델 경로 사용)
-conc_yearly_unet_model = tf.keras.models.load_model('/mnt/dsk1/yhlee/workdir/cmaqnet/models/cond_unet_o3_all')
+# conc_yearly_unet_model = tf.keras.models.load_model('/mnt/dsk1/yhlee/workdir/cmaqnet/models/cond_unet_o3_all')
+conc_yearly_unet_model = tf.keras.models.load_model('/home/user/workdir/CMAQ_Emulator/main/src/model/o3_prediction/final_model_main_v2')
 # conc_yearly_unet_model = tf.keras.models.load_model('/mnt/dsk1/yhlee/workdir/cmaqnet/models/model_deploy/conc_pm25')
 conc_yearly_unet_model.summary()
 # 총 샘플 개수 및 배치 사이즈 설정

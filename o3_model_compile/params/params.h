@@ -2,7 +2,7 @@
 #define PARAMS_H
 
 #define CMAQ_PAR_REGION_NUM           17
-#define CMAQ_PAR_SECTOR_NUM           7
+#define CMAQ_PAR_SECTOR_NUM           2
 #define CMAQ_PAR_CTRLMAX_NUM          CMAQ_PAR_REGION_NUM*CMAQ_PAR_SECTOR_NUM
 #define CMAQ_PAR_SPECIES_NUM          6
 #define CMAQ_PAR_ROW_NUM              82

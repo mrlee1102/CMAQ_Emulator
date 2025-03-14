@@ -1,5 +1,25 @@
 # model path: /home/user/workdir/CMAQ_Emulator/main/src/model/o3_prediction/final_model_main_v2
 
+"""README
+Control matrix information (17*5 features):
+    - Precursor (5 features):
+        X_NOx_ALL, X_SOx_ALL, X_VOC_ALL, X_NH3_ALL, X_PM25_ALL
+    - Region X (17 features):
+        A: Seoul City,   B: Incheon City, C: Busan City,   D: Daegu City,
+        E: Gwangju City, F: Gyeonggi-do,  G: Gangwon-do,   H: Chungbuk-do,
+        I: Chungnam-do,  J: Gyeongbuk-do, K: Gyeongnam-do, L: Jeonbuk-do,
+        M: Jeonnam-do,   N: Jeju-do,      O: Daejeon City, P: Ulsan City,
+        Q: Sejong City
+
+Concentration information:
+    - PM2.5 (micrograms/m**3)
+
+Map information:
+    - Grid resolution: 9 km x 9 km
+    - Grid size: 82 x 67
+    - Total grid: 5,494
+"""
+
 import os, sys
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
