@@ -6,9 +6,9 @@
             "name": "Debug forward",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/model_compile/forward", // 실행 파일 경로
+            "program": "${workspaceFolder}/o3_model_compile/forward", // 실행 파일 경로
             "args": [], // 필요하면 인자 설정
-            "cwd": "${workspaceFolder}/model_compile", // 작업 디렉터리
+            "cwd": "${workspaceFolder}/o3_model_compile", // 작업 디렉터리
             "preLaunchTask": "Build forward", // 빌드 작업과 연결
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb", // gdb 경로

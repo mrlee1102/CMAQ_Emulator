@@ -9,7 +9,7 @@ import joblib
 # ========= CMAQNet 모델 (공유 라이브러리) =========
 class CMAQNet(object):
     # 공유 라이브러리 로드
-    model = ctypes.CDLL('/home/user/workdir/CMAQ_Emulator/o3_model_compile/build/libo3_model.so')
+    model = ctypes.CDLL('/home/user/workdir/CMAQ_Emulator/GreenEco/libo3_model.so')
     # 함수 프로토타입: void call(float *c_inputs, float *c_outputs, int batch_size)
     model.call.argtypes = [
         ctypes.POINTER(ctypes.c_float),  # 컨트롤 입력 (flattened)
@@ -44,7 +44,7 @@ inputs = (np.random.rand(total_size, 17*2) + 0.5).astype(np.float32)
 outputs = CMAQNet.predict(inputs, batch_size)
 
 # 스케일러 로드 후 inverse transform 적용
-scaler = joblib.load('/home/user/workdir/CMAQ_Emulator/main/o3_training/o3_prediction_origin_v2.pkl')
+scaler = joblib.load('/home/user/workdir/CMAQ_Emulator/GreenEco/scale_parameter.pkl')
 n_samples = outputs.shape[0]  # 테스트 샘플 수
 prediction = scaler.inverse_transform(outputs.reshape(n_samples, -1))
 outputs = prediction.reshape(outputs.shape)
@@ -62,6 +62,6 @@ plt.tight_layout()
 # plt.show()
 
 # 결과 이미지를 파일로 저장
-plt.savefig('/home/user/workdir/CMAQ_Emulator/o3_model_compile/result/result.png')
+plt.savefig('/home/user/workdir/CMAQ_Emulator/GreenEco/result/result.jpg')
 
 plt.close()

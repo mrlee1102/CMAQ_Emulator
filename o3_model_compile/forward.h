@@ -34,6 +34,7 @@
 #endif
 
 #include "params/params.h"
+#include "params/scale_params.h"
 #include "params/layer_gridding.h"
 #include "params/layer_0_params_conv2d.h"
 #include "params/layer_1_params_batch_norm.h"
