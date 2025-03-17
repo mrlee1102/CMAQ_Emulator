@@ -1,3 +1,14 @@
 {
-    "cmake.sourceDirectory": "/home/user/workdir/CMAQ_Emulator/model_compile"
+    "cmake.sourceDirectory": "/home/user/workdir/CMAQ_Emulator/model_compile",
+    "files.associations": {
+        "forward.h": "c",
+        "scale_params.h": "c",
+        "concat.h": "c",
+        "conv2d.h": "c",
+        "params.h": "c",
+        "layer_5_params_batch_norm.h": "c",
+        "layer_2_params_conv2d.h": "c",
+        "conv2d_transpose.h": "c",
+        "mem.h": "c"
+    }
 }
