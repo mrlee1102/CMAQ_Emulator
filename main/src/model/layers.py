@@ -30,12 +30,16 @@ class GriddingLayer(tf.keras.layers.Layer):
             ratio = self.allocation.loc[self.allocation['Region_Code'] == key, ['Ratio']].values / 100
             self.indices.append(tf.constant(index, dtype=tf.int32))
             self.ratios.append(tf.constant(ratio, shape=(1, len(ratio), 1), dtype=tf.float32))
-
-    def call(self, inputs, ctrl_dim:None):
+    
+    from typing import Optional
+    def call(self, inputs, ctrl_dim:Optional[int] = None):
         if ctrl_dim is None:
             raise ValueError("The 'ctrl_dim' parameter must be specified when calling GriddingLayer.")
-        reshaped_inputs = tf.reshape(inputs, (-1, 17, ctrl_dim))
+        # reshaped_inputs = tf.reshape(inputs, (-1, 17, ctrl_dim))
+        # batch_size = tf.shape(inputs)[0]
+
         batch_size = tf.shape(inputs)[0]
+        reshaped_inputs = tf.reshape(inputs, tf.stack([batch_size, 17, ctrl_dim]))
         ctrl_map_shape_batch = (batch_size, 82, 67, ctrl_dim)
         ctrl_map = tf.zeros(ctrl_map_shape_batch, dtype=tf.float32)
         for i, (index, ratio) in enumerate(zip(self.indices, self.ratios)):
