@@ -175,6 +175,7 @@ cython_debug/
 ACONC.*
 EMIS_AVG.*
 *.npz
+*.npy
 
 # Model
 *.pb
