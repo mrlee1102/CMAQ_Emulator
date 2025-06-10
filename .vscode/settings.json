@@ -9,6 +9,25 @@
         "layer_5_params_batch_norm.h": "c",
         "layer_2_params_conv2d.h": "c",
         "conv2d_transpose.h": "c",
-        "mem.h": "c"
+        "mem.h": "c",
+        "batch_normalization.h": "c",
+        "logger.h": "c",
+        "pooling.h": "c",
+        "*.inc": "c",
+        "math.h": "c",
+        "layer_gridding.h": "c",
+        "array": "c",
+        "chrono": "c",
+        "compare": "c",
+        "functional": "c",
+        "istream": "c",
+        "memory_resource": "c",
+        "ostream": "c",
+        "ranges": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "activation.h": "c"
     }
 }
