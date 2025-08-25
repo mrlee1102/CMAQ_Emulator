@@ -1,0 +1,202 @@
+Region_Name,SIG_ENG_NM,True_Avg_PM2.5,Pred_Avg_PM2.5,Difference (Pred - True)
+Seoul,Jongno-gu,19.134909,18.895967,-0.2389412
+Seoul,Nowon-gu,20.400839,20.075119,-0.32571983
+Seoul,Songpa-gu,20.653564,20.347475,-0.3060894
+Seoul,Yeongdeungpo-gu,21.25797,20.996424,-0.2615471
+Seoul,Yongsan-gu,20.594492,20.315691,-0.27880096
+Incheon,Ganghwa-gun,12.927131,12.76803,-0.15910053
+Incheon,Jung-gu,15.400241,15.277865,-0.12237549
+Incheon,Michuhol-gu,23.265944,23.02823,-0.23771286
+Incheon,Namdong-gu,21.865046,21.481735,-0.38331032
+Incheon,Ongjin-gun,11.899758,11.77829,-0.121468544
+Incheon,Seo-gu,19.676447,19.42239,-0.25405693
+Incheon,Yeonsu-gu,17.476482,17.28519,-0.19129181
+Busan,Busanjin-gu,12.607863,12.497266,-0.11059761
+Busan,Gangseo-gu,12.309477,12.223819,-0.08565807
+Busan,Geumjeong-gu,11.624524,11.554943,-0.06958103
+Busan,Gijang-gun,10.800375,10.727453,-0.07292175
+Busan,Haeundae-gu,11.303781,11.183911,-0.11986923
+Busan,Nam-gu,9.804957,9.703324,-0.10163307
+Busan,Saha-gu,10.982631,10.909477,-0.073153496
+Busan,Yeongdo-gu,10.645386,10.571293,-0.074092865
+Daegu,Buk-gu,14.377288,14.218052,-0.15923595
+Daegu,Dalseo-gu,17.834433,17.622921,-0.21151161
+Daegu,Dalseong-gun,16.063694,15.882273,-0.18142128
+Daegu,Dong-gu,13.203928,13.099089,-0.104839325
+Daegu,Suseong-gu,16.410082,16.1989,-0.21118164
+Gwangju,Buk-gu,13.447258,13.330269,-0.116989136
+Gwangju,Dong-gu,13.106938,13.006808,-0.10013008
+Gwangju,Gwangsan-gu,14.117427,13.969499,-0.14792824
+Gwangju,Seo-gu,15.385513,15.168824,-0.21668911
+Gyeonggi,Anseong-si,20.01528,19.73962,-0.27565956
+Gyeonggi,Bucheon-si,21.294003,20.997551,-0.29645157
+Gyeonggi,"Bundang-gu, Seongnam-si",20.40503,20.070097,-0.33493233
+Gyeonggi,"Cheoin-gu, Yongin-si",19.700571,19.410238,-0.2903328
+Gyeonggi,"Danwon-gu, Ansan-si",15.6175785,15.455664,-0.16191483
+Gyeonggi,"Deogyang-gu, Goyang-si",18.253387,18.006662,-0.24672508
+Gyeonggi,Dongducheon-si,16.191378,16.090982,-0.1003952
+Gyeonggi,Gapyeong-gun,15.003357,14.878847,-0.12450981
+Gyeonggi,"Giheung-gu, Yongin-si",22.178537,21.714445,-0.46409225
+Gyeonggi,Gimpo-si,16.696709,16.478403,-0.21830559
+Gyeonggi,Gwacheon-si,20.402895,20.101292,-0.30160332
+Gyeonggi,Gwangju-si,18.899286,18.632696,-0.26659012
+Gyeonggi,Gwangmyeong-si,21.43482,21.075068,-0.35975266
+Gyeonggi,"Gwonseon-gu, Suwon-si",22.033041,21.577803,-0.45523834
+Gyeonggi,Hanam-si,19.330992,19.023468,-0.30752373
+Gyeonggi,Hwaseong-si,19.0042,18.75075,-0.2534504
+Gyeonggi,Icheon-si,20.219797,19.886395,-0.33340263
+Gyeonggi,"Ilsandong-gu, Goyang-si",18.874516,18.546228,-0.32828712
+Gyeonggi,Namyangju-si,17.161163,16.96633,-0.19483376
+Gyeonggi,Paju-si,15.409228,15.24024,-0.16898823
+Gyeonggi,Pocheon-si,15.288431,15.189155,-0.09927654
+Gyeonggi,Pyeongtaek-si,20.60625,20.284487,-0.321764
+Gyeonggi,Siheung-si,20.250166,19.91425,-0.33591652
+Gyeonggi,"Sujeong-gu, Seongnam-si",20.669313,20.342678,-0.32663536
+Gyeonggi,Uijeongbu-si,18.83488,18.538443,-0.29643822
+Gyeonggi,Uiwang-si,19.89212,19.585135,-0.30698586
+Gyeonggi,Yangju-si,17.587372,17.404003,-0.18336868
+Gyeonggi,Yangpyeong-gun,16.636585,16.436604,-0.19998169
+Gyeonggi,Yeoju-si,18.71263,18.426487,-0.28614235
+Gyeonggi,Yeoncheon-gun,13.90227,13.762764,-0.13950634
+Gangwon,Cheorwon-gun,12.695973,12.559561,-0.13641262
+Gangwon,Chuncheon-si,14.032765,13.92463,-0.10813522
+Gangwon,Donghae-si,9.650608,9.595057,-0.05555153
+Gangwon,Gangneung-si,9.062657,9.0343275,-0.02832985
+Gangwon,Goseong-gun,8.723977,8.648152,-0.07582474
+Gangwon,Hoengseong-gun,14.132113,14.003387,-0.128726
+Gangwon,Hongcheon-gun,13.065324,12.970114,-0.095210075
+Gangwon,Hwacheon-gun,12.790765,12.717359,-0.07340622
+Gangwon,Inje-gun,11.233022,11.194178,-0.03884411
+Gangwon,Jeongseon-gun,10.5468645,10.540175,-0.0066890717
+Gangwon,Pyeongchang-gun,10.7929945,10.781415,-0.011579514
+Gangwon,Samcheok-si,8.819548,8.812377,-0.007170677
+Gangwon,Sokcho-si,9.504419,9.458229,-0.04619026
+Gangwon,Taebaek-si,9.6136465,9.625005,0.011358261
+Gangwon,Wonju-si,15.741813,15.525186,-0.21662712
+Gangwon,Yanggu-gun,11.620134,11.536914,-0.08322048
+Gangwon,Yangyang-gun,9.20024,9.160334,-0.0399065
+Gangwon,Yeongwol-gun,12.669892,12.605438,-0.06445408
+Chungbuk,Boeun-gun,16.182325,15.940352,-0.24197292
+Chungbuk,"Cheongwon-gu, Cheongju-si",18.369057,18.10474,-0.26431656
+Chungbuk,Chungju-si,17.423332,17.147757,-0.27557564
+Chungbuk,Danyang-gun,14.939543,14.833944,-0.10559845
+Chungbuk,Eumseong-gun,18.838316,18.571705,-0.2666111
+Chungbuk,Goesan-gun,16.860615,16.620121,-0.24049377
+Chungbuk,"Heungdeok-gu, Cheongju-si",19.250553,19.000786,-0.2497673
+Chungbuk,Jecheon-si,15.701449,15.501487,-0.19996262
+Chungbuk,Jeungpyeong-gun,18.159872,17.896688,-0.2631836
+Chungbuk,Jincheon-gun,19.321293,19.052979,-0.26831436
+Chungbuk,Okcheon-gun,16.49487,16.27245,-0.22241974
+Chungbuk,"Sangdang-gu, Cheongju-si",16.987085,16.768251,-0.21883392
+Chungbuk,"Seowon-gu, Cheongju-si",19.925398,19.558832,-0.3665657
+Chungbuk,Yeongdong-gun,15.10978,14.931802,-0.17797852
+Chung-Nam,Asan-si,19.858286,19.612957,-0.2453289
+Chung-Nam,Boryeong-si,13.566221,13.414676,-0.15154552
+Chung-Nam,Buyeo-gun,17.262325,17.073202,-0.18912315
+Chung-Nam,Cheongyang-gun,17.29034,17.082531,-0.20780945
+Chung-Nam,Dangjin-si,24.071575,23.573484,-0.49809074
+Chung-Nam,"Dongnam-gu, Cheonan-si",19.349401,19.125996,-0.22340584
+Chung-Nam,Geumsan-gun,15.058604,14.90549,-0.15311432
+Chung-Nam,Gongju-si,17.90115,17.68496,-0.21619034
+Chung-Nam,Gyeryong-si,17.012016,16.833939,-0.1780777
+Chung-Nam,Hongseong-gun,17.847937,17.644094,-0.20384216
+Chung-Nam,Nonsan-si,16.892292,16.695522,-0.19676971
+Chung-Nam,"Seobuk-gu, Cheonan-si",19.817207,19.55553,-0.2616768
+Chung-Nam,Seocheon-gun,16.320433,16.134584,-0.18584824
+Chung-Nam,Seosan-si,17.266336,17.052536,-0.21380043
+Chung-Nam,Taean-gun,12.261718,12.123161,-0.13855648
+Chung-Nam,Yesan-gun,18.96943,18.742786,-0.22664452
+Gyeong-Buk,Andong-si,13.898767,13.771892,-0.12687588
+Gyeong-Buk,Bonghwa-gun,11.328569,11.277198,-0.051371574
+Gyeong-Buk,"Buk-gu, Pohang-si",11.709328,11.584645,-0.12468243
+Gyeong-Buk,Cheongdo-gun,14.154136,14.026479,-0.12765694
+Gyeong-Buk,Cheongsong-gun,12.517393,12.418807,-0.09858608
+Gyeong-Buk,Chilgok-gun,15.90318,15.687032,-0.21614838
+Gyeong-Buk,Gimcheon-si,15.433059,15.243223,-0.18983555
+Gyeong-Buk,Goryeong-gun,15.738198,15.574061,-0.16413689
+Gyeong-Buk,Gumi-si,16.758875,16.500858,-0.2580166
+Gyeong-Buk,Gunwi-gun,15.024656,14.850827,-0.17382908
+Gyeong-Buk,Gyeongju-si,17.071278,16.770334,-0.30094337
+Gyeong-Buk,Gyeongsan-si,15.208355,15.020748,-0.18760681
+Gyeong-Buk,Mungyeong-si,14.788313,14.604701,-0.18361187
+Gyeong-Buk,"Nam-gu, Pohang-si",21.512943,20.916246,-0.59669685
+Gyeong-Buk,Sangju-si,15.714785,15.474076,-0.24070835
+Gyeong-Buk,Seongju-gun,15.766547,15.5867605,-0.17978668
+Gyeong-Buk,Uiseong-gun,14.752589,14.587581,-0.16500854
+Gyeong-Buk,Uljin-gun,8.625625,8.6021,-0.023524284
+Gyeong-Buk,Ulleung-gun,6.1821694,6.1882286,0.00605917
+Gyeong-Buk,Yecheon-gun,14.786136,14.612665,-0.1734705
+Gyeong-Buk,Yeongcheon-si,13.825454,13.671123,-0.1543312
+Gyeong-Buk,Yeongdeok-gun,10.139489,10.046506,-0.092983246
+Gyeong-Buk,Yeongju-si,14.300446,14.158442,-0.14200401
+Gyeong-Buk,Yeongyang-gun,10.966267,10.921602,-0.044664383
+Gyeong-Nam,Changnyeong-gun,13.882155,13.764558,-0.11759758
+Gyeong-Nam,Geochang-gun,12.457895,12.382134,-0.07576084
+Gyeong-Nam,Geoje-si,8.987972,8.950396,-0.037576675
+Gyeong-Nam,Gimhae-si,13.364064,13.262614,-0.10144997
+Gyeong-Nam,Goseong-gun,12.389231,12.305771,-0.083459854
+Gyeong-Nam,Hadong-gun,11.241034,11.210291,-0.030742645
+Gyeong-Nam,Haman-gun,14.9660635,14.812391,-0.15367222
+Gyeong-Nam,Hamyang-gun,11.844497,11.801193,-0.04330349
+Gyeong-Nam,Hapcheon-gun,13.275971,13.184314,-0.09165764
+Gyeong-Nam,"Jinhae-gu, Changwon-si",11.918975,11.859197,-0.059778214
+Gyeong-Nam,Jinju-si,13.600351,13.499843,-0.10050869
+Gyeong-Nam,"Masanhappo-gu, Changwon-si",12.453131,12.374754,-0.07837677
+Gyeong-Nam,"Masanhoewon-gu, Changwon-si",14.078739,13.955581,-0.123158455
+Gyeong-Nam,Miryang-si,12.536358,12.457635,-0.078722954
+Gyeong-Nam,Namhae-gun,10.463086,10.392865,-0.07022095
+Gyeong-Nam,Sacheon-si,13.453503,13.358673,-0.09482956
+Gyeong-Nam,Sancheong-gun,11.8203745,11.782048,-0.038326263
+Gyeong-Nam,"Seongsan-gu, Changwon-si",15.45087,15.321904,-0.12896538
+Gyeong-Nam,Tongyeong-si,8.836373,8.767364,-0.06900978
+Gyeong-Nam,"Uichang-gu, Changwon-si",13.707274,13.616961,-0.09031391
+Gyeong-Nam,Uiryeong-gun,14.52229,14.397712,-0.124578476
+Gyeong-Nam,Yangsan-si,11.518889,11.447427,-0.07146263
+Jeon-Buk,Buan-gun,13.13391,13.001154,-0.13275623
+Jeon-Buk,"Deokjin-gu, Jeonju-si",15.715075,15.565349,-0.14972591
+Jeon-Buk,Gimje-si,16.004562,15.854945,-0.1496172
+Jeon-Buk,Gochang-gun,14.159742,14.030716,-0.12902641
+Jeon-Buk,Gunsan-si,13.12483,12.991288,-0.13354206
+Jeon-Buk,Iksan-si,17.24744,17.042545,-0.20489502
+Jeon-Buk,Imsil-gun,13.532347,13.454803,-0.07754326
+Jeon-Buk,Jangsu-gun,12.433086,12.374146,-0.058939934
+Jeon-Buk,Jeongeup-si,15.247791,15.120275,-0.12751675
+Jeon-Buk,Jinan-gun,13.352757,13.254,-0.098757744
+Jeon-Buk,Muju-gun,13.020237,12.925658,-0.09457874
+Jeon-Buk,Namwon-si,12.398216,12.347457,-0.050759315
+Jeon-Buk,Sunchang-gun,13.523417,13.446333,-0.07708454
+Jeon-Buk,Wanju-gun,14.531416,14.381842,-0.14957428
+Jeon-Buk,"Wansan-gu, Jeonju-si",15.461909,15.290024,-0.17188549
+Jeon-Nam,Boseong-gun,12.658362,12.594156,-0.06420612
+Jeon-Nam,Damyang-gun,13.265734,13.178995,-0.08673859
+Jeon-Nam,Gangjin-gun,11.785946,11.736229,-0.04971695
+Jeon-Nam,Goheung-gun,9.846983,9.817389,-0.029594421
+Jeon-Nam,Gokseong-gun,12.948355,12.870506,-0.077848434
+Jeon-Nam,Gurye-gun,10.832251,10.827593,-0.0046577454
+Jeon-Nam,Gwangyang-si,18.338266,18.02233,-0.31593704
+Jeon-Nam,Haenam-gun,10.64776,10.611187,-0.03657341
+Jeon-Nam,Hampyeong-gun,13.953048,13.850932,-0.10211563
+Jeon-Nam,Hwasun-gun,12.545876,12.483981,-0.061894417
+Jeon-Nam,Jangheung-gun,11.54828,11.501932,-0.046347618
+Jeon-Nam,Jangseong-gun,13.48385,13.38899,-0.09485912
+Jeon-Nam,Jindo-gun,8.222323,8.18735,-0.034973145
+Jeon-Nam,Mokpo-si,12.50828,12.39962,-0.108659744
+Jeon-Nam,Muan-gun,13.174032,13.089726,-0.08430576
+Jeon-Nam,Naju-si,14.201259,14.05293,-0.14832878
+Jeon-Nam,Sinan-gun,8.588062,8.537146,-0.05091667
+Jeon-Nam,Suncheon-si,15.399062,15.217371,-0.18169117
+Jeon-Nam,Wando-gun,8.066987,8.042181,-0.024806023
+Jeon-Nam,Yeongam-gun,13.053325,12.963621,-0.08970356
+Jeon-Nam,Yeonggwang-gun,11.616635,11.539686,-0.07694912
+Jeon-Nam,Yeosu-si,9.399225,9.319321,-0.079904556
+Jeju,Jeju-si,7.1261873,7.0836954,-0.042491913
+Jeju,Seogwipo-si,6.8698854,6.836969,-0.032916546
+Daejeon,Daedeok-gu,16.778551,16.532867,-0.24568367
+Daejeon,Dong-gu,16.75462,16.55724,-0.19738007
+Daejeon,Seo-gu,17.519373,17.322374,-0.1969986
+Daejeon,Yuseong-gu,18.48754,18.198032,-0.2895069
+Ulsan,Buk-gu,13.216816,13.097694,-0.11912155
+Ulsan,Dong-gu,10.370206,10.305622,-0.06458378
+Ulsan,Nam-gu,14.2270975,14.092014,-0.1350832
+Ulsan,Ulju-gun,13.491662,13.364911,-0.12675095
+Sejong,Sejong-si,18.959812,18.734865,-0.22494698
